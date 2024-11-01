@@ -1,0 +1,66 @@
+package com.abdehamid.GestionFormation.service.Impl;
+
+
+import java.util.Optional;
+
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
+import com.abdehamid.GestionFormation.exceptions.ApprenantNotFoundException;
+import com.abdehamid.GestionFormation.model.Apprenant;
+import com.abdehamid.GestionFormation.repository.ApprenantRepository;
+import com.abdehamid.GestionFormation.service.Interface.IGeneralService;
+import lombok.AllArgsConstructor;
+
+@Service
+@AllArgsConstructor
+public class ApprenantServiceImpl implements IGeneralService<Apprenant, Long> {
+
+    private final ApprenantRepository apprenantRepository;
+
+    @Override
+    public Apprenant create(Apprenant entity) {
+        return apprenantRepository.save(entity);
+    }
+
+    @Override
+    public Apprenant update(Long id, Apprenant entity) {
+        return apprenantRepository.findById(id)
+                .map(existingApprenant -> {
+                    existingApprenant.setNom(entity.getNom());
+                    existingApprenant.setPrenom(entity.getPrenom());
+                    existingApprenant.setEmail(entity.getEmail());
+                    existingApprenant.setNiveau(entity.getNiveau());
+                    existingApprenant.setClasse(entity.getClasse());
+                    existingApprenant.setFormation(entity.getFormation());
+                    return apprenantRepository.save(existingApprenant);
+                })
+                .orElseThrow(() -> new ApprenantNotFoundException(id));
+    }
+
+    @Override
+    public String delete(Long id) {
+        if (!apprenantRepository.existsById(id)) {
+            throw new ApprenantNotFoundException(id);
+        }
+        apprenantRepository.deleteById(id);
+        return "Apprenant supprimé avec succès !";
+    }
+
+    @Override
+    public Optional<Apprenant> findById(Long id) {
+        if (!apprenantRepository.existsById(id)) {
+            throw new ApprenantNotFoundException(id);
+        }
+        return apprenantRepository.findById(id);
+    }
+
+    @Override
+    public Page<Apprenant> findAll(Pageable pageable) {
+        return apprenantRepository.findApprenantWithClasseAndFormation(pageable);
+    }
+
+    @Override
+    public Optional<Apprenant> findByNom(String nom) {
+        return apprenantRepository.findByNom(nom);
+    }
+}
